@@ -9,8 +9,10 @@ void Vehicle_Init( PTR_VEHICLE_DATA_MANAGER dev )
     dev->num_pids = 0;
     dev->num_data = 0;
 
-    for( uint8_t i = 0; i < LIB_VEHICLE_MAX_DATA; i++)
-        lib_pid_clear_PID( dev->data[i] );
+    for( uint8_t i = 0; i < LIB_VEHICLE_MAX_PARAMS; i++) {
+        lib_pid_clear_PID( dev->data1[i] );
+        lib_pid_clear_PID( dev->data2[i] );
+    }
 
     for( uint8_t i = 0; i < LIB_VEHICLE_MAX_PARAMS; i++)
         dev->formula[i].equation = VEHICLE_DATA_EQ_NOT_DEFINED;
@@ -66,6 +68,12 @@ VEHICLE_DATA_STATUS Vehicle_remove_PID_request( PTR_VEHICLE_DATA_MANAGER dev, PT
                 }
             }
 
+            /* Remove the first data point needed for the PID */
+            dev->clear_pid( dev->data1[index] );
+
+            /* Remove the second data point needed for the PID */
+            dev->clear_pid( dev->data2[index] );
+
             /* Remove the PID */
             if( dev->num_pids > 0 )
                 dev->num_pids--;
@@ -96,21 +104,15 @@ void Vehicle_service( PTR_VEHICLE_DATA_MANAGER dev )
                             req.pid      = MODE1_INTAKE_MANIFOLD_ABSOLUTE_PRESSURE;
                             req.pid_unit = MODE1_INTAKE_MANIFOLD_ABSOLUTE_PRESSURE_UNITS;
 
-                            /* Save the MAP data index */
-                            dev->formula[i].val1 = dev->num_data;
-
                             /* Add the PID request */
-                            dev->data[dev->num_data++] = dev->req_pid( &req );
+                            dev->data1[i] = dev->req_pid( &req );
 
                             req.mode     = MODE1;
                             req.pid      = MODE1_ABSOLUTE_BAROMETRIC_PRESSURE;
                             req.pid_unit = MODE1_ABSOLUTE_BAROMETRIC_PRESSURE_UNITS;
 
-                            /* Save the Baro data index */
-                            dev->formula[i].val2 = dev->num_data;
-
                             /* Add the PID request */
-                            dev->data[dev->num_data++] = dev->req_pid( &req );
+                            dev->data2[i] = dev->req_pid( &req );
 
                             /* Boost = MAP - Baro */
                             dev->formula[i].equation = VEHICLE_DATA_EQ_VAL1_MINUS_VAL2;
@@ -131,9 +133,13 @@ void Vehicle_service( PTR_VEHICLE_DATA_MANAGER dev )
         switch( dev->formula[i].equation )
         {
             case VEHICLE_DATA_EQ_VAL1_MINUS_VAL2:
-                dev->stream[i]->pid_value = dev->data[dev->formula[i].val1]->pid_value - dev->data[dev->formula[i].val2]->pid_value;
-                if( dev->data[dev->formula[i].val1]->timestamp > 0)
-                dev->stream[i]->timestamp = vehicle_tick;
+                /* Calaculate the value: PID_Value = Val1 - Val2 */
+                dev->stream[i]->pid_value = dev->data1[i]->pid_value - dev->data2[i]->pid_value;
+
+                /* Only update the PID timestamp if both PIDs have been acquired. */
+                if( (dev->data1[i]->timestamp > 0) & (dev->data2[i]->timestamp > 0) )
+                    dev->stream[i]->timestamp = vehicle_tick;
+
                 break;
 
             case VEHICLE_DATA_EQ_NOT_DEFINED:

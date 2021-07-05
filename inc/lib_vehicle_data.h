@@ -17,15 +17,15 @@ typedef struct _vehicle_data_equation {
     uint8_t equation;
         #define VEHICLE_DATA_EQ_NOT_DEFINED     0
         #define VEHICLE_DATA_EQ_VAL1_MINUS_VAL2 1
-    uint8_t val1;
-    uint8_t val2;
 } VEHICLE_DATA_EQUATION, *PTR_VEHICLE_DATA_EQUATION;
 
 typedef struct _vehicle_data_manager {
 
     PTR_PID_DATA stream[LIB_VEHICLE_MAX_PARAMS];
 
-    PTR_PID_DATA data[LIB_VEHICLE_MAX_DATA];
+    PTR_PID_DATA data1[LIB_VEHICLE_MAX_PARAMS];
+
+    PTR_PID_DATA data2[LIB_VEHICLE_MAX_PARAMS];
 
     VEHICLE_DATA_EQUATION formula[LIB_VEHICLE_MAX_PARAMS];
 
@@ -47,6 +47,8 @@ typedef struct _vehicle_data_manager {
 void Vehicle_Init( PTR_VEHICLE_DATA_MANAGER dev );
 
 VEHICLE_DATA_STATUS Vehicle_add_parameter( PTR_VEHICLE_DATA_MANAGER dev, PTR_PID_DATA pid );
+
+VEHICLE_DATA_STATUS Vehicle_remove_PID_request( PTR_VEHICLE_DATA_MANAGER dev, PTR_PID_DATA pid );
 
 void Vehicle_service( PTR_VEHICLE_DATA_MANAGER dev );
 
