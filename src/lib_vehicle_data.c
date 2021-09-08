@@ -100,6 +100,10 @@ void Vehicle_service( PTR_VEHICLE_DATA_MANAGER dev )
                     switch( dev->stream[i]->pid )
                     {
                         case CALC1_TURBOCHARGER_COMPRESSOR_INLET_PRESSURE:
+
+                            /* The Boost/Vacuum base unit is kPa */
+                            dev->stream[i]->base_unit = PID_UNITS_KPA;
+
                             req.mode     = MODE1;
                             req.pid      = MODE1_INTAKE_MANIFOLD_ABSOLUTE_PRESSURE;
                             req.pid_unit = MODE1_INTAKE_MANIFOLD_ABSOLUTE_PRESSURE_UNITS;
