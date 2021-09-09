@@ -70,16 +70,6 @@ VEHICLE_DATA_STATUS Vehicle_remove_PID_request( PTR_VEHICLE_DATA_MANAGER dev, PT
                 dev->stream[index] = NULL;
             }
 
-            /* Remove the first data point needed for the PID */
-            dev->clear_pid( dev->data1[index] );
-
-            /* Remove the second data point needed for the PID */
-            dev->clear_pid( dev->data2[index] );
-
-            /* Remove the PID */
-            if( dev->num_pids > 0 )
-                dev->num_pids--;
-
             /* Return a success */
             return VEHICLE_DATA_OK;
         }
@@ -127,6 +117,24 @@ void Vehicle_service( PTR_VEHICLE_DATA_MANAGER dev )
                     break;
 
                 default:
+                    /*
+                     * Check to see if the stream has been NULL'd. If so the data points have to be
+                     * cleared too.
+                     */
+                    if( (dev->stream[i] == NULL) & ((dev->data1[i] != NULL) | (dev->data1[i] != NULL)) )
+                    {
+                        /* Remove the first data point needed for the PID */
+                        if( dev->data1[i] != NULL )
+                            dev->clear_pid( dev->data1[i] );
+
+                        /* Remove the second data point needed for the PID */
+                        if( dev->data2[i] != NULL )
+                            dev->clear_pid( dev->data2[i] );
+
+                        /* Remove the PID */
+                        if( dev->num_pids > 0 )
+                            dev->num_pids--;
+                    }
                     break;
             }
         }
