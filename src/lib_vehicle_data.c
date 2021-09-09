@@ -66,6 +66,8 @@ VEHICLE_DATA_STATUS Vehicle_remove_PID_request( PTR_VEHICLE_DATA_MANAGER dev, PT
                     dev->stream[i] = dev->stream[i + 1];
                     dev->stream[i + 1] = NULL;
                 }
+            } else {
+                dev->stream[index] = NULL;
             }
 
             /* Remove the first data point needed for the PID */
