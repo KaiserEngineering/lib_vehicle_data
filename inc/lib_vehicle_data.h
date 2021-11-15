@@ -17,6 +17,7 @@ typedef struct _vehicle_data_equation {
     uint8_t equation;
         #define VEHICLE_DATA_EQ_NOT_DEFINED     0
         #define VEHICLE_DATA_EQ_VAL1_MINUS_VAL2 1
+        #define VEHICLE_DATA_EQ_TOGGLE_ON_TRUE  2
 } VEHICLE_DATA_EQUATION, *PTR_VEHICLE_DATA_EQUATION;
 
 typedef struct _vehicle_data_manager {
@@ -26,6 +27,8 @@ typedef struct _vehicle_data_manager {
     PTR_PID_DATA data1[LIB_VEHICLE_MAX_PARAMS];
 
     PTR_PID_DATA data2[LIB_VEHICLE_MAX_PARAMS];
+
+    uint8_t flag;
 
     VEHICLE_DATA_EQUATION formula[LIB_VEHICLE_MAX_PARAMS];
 

@@ -14,6 +14,8 @@ void Vehicle_Init( PTR_VEHICLE_DATA_MANAGER dev )
         lib_pid_clear_PID( dev->data2[i] );
     }
 
+    dev->flag = 0;
+
     for( uint8_t i = 0; i < LIB_VEHICLE_MAX_PARAMS; i++)
         dev->formula[i].equation = VEHICLE_DATA_EQ_NOT_DEFINED;
 }
@@ -26,6 +28,7 @@ VEHICLE_DATA_STATUS Vehicle_add_parameter( PTR_VEHICLE_DATA_MANAGER dev, PTR_PID
             switch( pid->pid )
             {
                 case CALC1_TURBOCHARGER_COMPRESSOR_INLET_PRESSURE:
+                case CALC1_CRUISE_CONTROL_OFF_BUTTON_TOGGLE:
 
                     /* Set the flag to later request the needed data */
                     new_req = 1;
@@ -113,6 +116,25 @@ void Vehicle_service( PTR_VEHICLE_DATA_MANAGER dev )
                             /* Boost = MAP - Baro */
                             dev->formula[i].equation = VEHICLE_DATA_EQ_VAL1_MINUS_VAL2;
                             break;
+
+                        case CALC1_CRUISE_CONTROL_OFF_BUTTON_TOGGLE:
+
+                            /* The Cruise Control OFF button base unit is None */
+                            dev->stream[i]->base_unit = PID_UNITS_NONE;
+
+                            req.mode     = SNIFF;
+                            req.pid      = SNIFF_CRUISE_CONTROL_OFF_BUTTON;
+                            req.pid_unit = SNIFF_CRUISE_CONTROL_OFF_BUTTON_UNITS;
+
+                            /* Add the PID request */
+                            dev->data1[i] = dev->req_pid( &req );
+
+                            /* Only 1 data point is needed */
+                            dev->data2[i] = NULL;
+
+                            /* Cruise Control Toggle = Toggle when True */
+                            dev->formula[i].equation = VEHICLE_DATA_EQ_TOGGLE_ON_TRUE;
+                            break;
                     }
                     break;
 
@@ -147,7 +169,7 @@ void Vehicle_service( PTR_VEHICLE_DATA_MANAGER dev )
         switch( dev->formula[i].equation )
         {
             case VEHICLE_DATA_EQ_VAL1_MINUS_VAL2:
-                /* Calaculate the value: PID_Value = Val1 - Val2 */
+                /* Calculate the value: PID_Value = Val1 - Val2 */
                 dev->stream[i]->pid_value = dev->data1[i]->pid_value - dev->data2[i]->pid_value;
 
                 /* Only update the PID timestamp if both PIDs have been acquired. */
@@ -155,6 +177,32 @@ void Vehicle_service( PTR_VEHICLE_DATA_MANAGER dev )
                     dev->stream[i]->timestamp = vehicle_tick;
 
                 break;
+
+            case VEHICLE_DATA_EQ_TOGGLE_ON_TRUE:
+                /*
+                 * Check if the PID value is true, if so, see if this is a state change or
+                 * if the button is still being held.
+                 */
+                if( dev->data1[i]->pid_value ) {
+                    /*
+                     * flag is used to indicate when the state change has been seen.
+                     * A 0 means the value has yet to be toggled, a 1 means the button is still
+                     * being held and the value has already been toggled. Wait until the value
+                     * returns to FALSE.
+                     */
+                    if( dev->flag == 0 )
+                        dev->stream[i]->pid_value = ( dev->stream[i]->pid_value == 0 ) ? 1 : 0;
+
+                    /* Log that the state is still TRUE */
+                    dev->flag = 1;
+                } else{
+                    /* Log that the state is FALSE */
+                    dev->flag = 0;
+                }
+
+                /* Only 1 timestamp needs to be checked.. */
+                if( (dev->data1[i]->timestamp > 0) )
+                    dev->stream[i]->timestamp = vehicle_tick;
 
             case VEHICLE_DATA_EQ_NOT_DEFINED:
             default:
