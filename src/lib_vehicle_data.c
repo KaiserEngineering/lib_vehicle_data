@@ -10,8 +10,8 @@ void Vehicle_Init( PTR_VEHICLE_DATA_MANAGER dev )
     dev->num_data = 0;
 
     for( uint8_t i = 0; i < LIB_VEHICLE_MAX_PARAMS; i++) {
-        lib_pid_clear_PID( dev->data1[i] );
-        lib_pid_clear_PID( dev->data2[i] );
+        dev->data1[i] = NULL;
+        dev->data2[i] = NULL;
     }
 
     dev->flag = 0;
