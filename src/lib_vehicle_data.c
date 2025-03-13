@@ -171,6 +171,7 @@ void Vehicle_service( PTR_VEHICLE_DATA_MANAGER dev )
             case VEHICLE_DATA_EQ_VAL1_MINUS_VAL2:
                 /* Calculate the value: PID_Value = Val1 - Val2 */
                 dev->stream[i]->pid_value = dev->data1[i]->pid_value - dev->data2[i]->pid_value;
+                convert_units( dev->stream[i]->base_unit, dev->stream[i]->pid_unit, &dev->stream[i]->pid_value);
 
                 /* Only update the PID timestamp if both PIDs have been acquired. */
                 if( (dev->data1[i]->timestamp > 0) & (dev->data2[i]->timestamp > 0) )
@@ -203,6 +204,7 @@ void Vehicle_service( PTR_VEHICLE_DATA_MANAGER dev )
                 /* Only 1 timestamp needs to be checked.. */
                 if( (dev->data1[i]->timestamp > 0) )
                     dev->stream[i]->timestamp = vehicle_tick;
+                break;
 
             case VEHICLE_DATA_EQ_NOT_DEFINED:
             default:
