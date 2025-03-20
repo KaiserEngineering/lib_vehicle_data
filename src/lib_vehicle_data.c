@@ -27,8 +27,8 @@ VEHICLE_DATA_STATUS Vehicle_add_parameter( PTR_VEHICLE_DATA_MANAGER dev, PTR_PID
         case CALC1:
             switch( pid->pid )
             {
-                case CALC1_TURBOCHARGER_COMPRESSOR_INLET_PRESSURE:
-                case CALC1_CRUISE_CONTROL_OFF_BUTTON_TOGGLE:
+                case CALC1_TURBOCHARGER_COMPRESSOR_INLET_PRESSURE_PID:
+                case CALC1_CRUISE_CONTROL_OFF_BUTTON_TOGGLE_PID:
 
                     /* Set the flag to later request the needed data */
                     new_req = 1;
@@ -94,20 +94,20 @@ void Vehicle_service( PTR_VEHICLE_DATA_MANAGER dev )
                 case CALC1:
                     switch( dev->stream[i]->pid )
                     {
-                        case CALC1_TURBOCHARGER_COMPRESSOR_INLET_PRESSURE:
+                        case CALC1_TURBOCHARGER_COMPRESSOR_INLET_PRESSURE_PID:
 
                             /* The Boost/Vacuum base unit is kPa */
                             dev->stream[i]->base_unit = PID_UNITS_KPA;
 
                             req.mode     = MODE1;
-                            req.pid      = MODE1_INTAKE_MANIFOLD_ABSOLUTE_PRESSURE;
+                            req.pid      = MODE1_INTAKE_MANIFOLD_ABSOLUTE_PRESSURE_PID;
                             req.pid_unit = MODE1_INTAKE_MANIFOLD_ABSOLUTE_PRESSURE_UNITS;
 
                             /* Add the PID request */
                             dev->data1[i] = dev->req_pid( &req );
 
                             req.mode     = MODE1;
-                            req.pid      = MODE1_ABSOLUTE_BAROMETRIC_PRESSURE;
+                            req.pid      = MODE1_ABSOLUTE_BAROMETRIC_PRESSURE_PID;
                             req.pid_unit = MODE1_ABSOLUTE_BAROMETRIC_PRESSURE_UNITS;
 
                             /* Add the PID request */
@@ -117,13 +117,13 @@ void Vehicle_service( PTR_VEHICLE_DATA_MANAGER dev )
                             dev->formula[i].equation = VEHICLE_DATA_EQ_VAL1_MINUS_VAL2;
                             break;
 
-                        case CALC1_CRUISE_CONTROL_OFF_BUTTON_TOGGLE:
+                        case CALC1_CRUISE_CONTROL_OFF_BUTTON_TOGGLE_PID:
 
                             /* The Cruise Control OFF button base unit is None */
                             dev->stream[i]->base_unit = PID_UNITS_NONE;
 
                             req.mode     = SNIFF;
-                            req.pid      = SNIFF_CRUISE_CONTROL_OFF_BUTTON;
+                            req.pid      = SNIFF_CRUISE_CONTROL_OFF_BUTTON_PID;
                             req.pid_unit = SNIFF_CRUISE_CONTROL_OFF_BUTTON_UNITS;
 
                             /* Add the PID request */
