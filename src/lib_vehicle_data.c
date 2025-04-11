@@ -101,6 +101,7 @@ void Vehicle_service( PTR_VEHICLE_DATA_MANAGER dev )
 
                             req.mode     = MODE1;
                             req.pid      = MODE1_INTAKE_MANIFOLD_ABSOLUTE_PRESSURE_PID;
+                            req.pid_uuid = MODE1_INTAKE_MANIFOLD_ABSOLUTE_PRESSURE_UUID;
                             req.pid_unit = MODE1_INTAKE_MANIFOLD_ABSOLUTE_PRESSURE_UNITS;
 
                             /* Add the PID request */
@@ -108,6 +109,7 @@ void Vehicle_service( PTR_VEHICLE_DATA_MANAGER dev )
 
                             req.mode     = MODE1;
                             req.pid      = MODE1_ABSOLUTE_BAROMETRIC_PRESSURE_PID;
+                            req.pid_uuid = MODE1_ABSOLUTE_BAROMETRIC_PRESSURE_UUID;
                             req.pid_unit = MODE1_ABSOLUTE_BAROMETRIC_PRESSURE_UNITS;
 
                             /* Add the PID request */
@@ -124,6 +126,7 @@ void Vehicle_service( PTR_VEHICLE_DATA_MANAGER dev )
 
                             req.mode     = SNIFF;
                             req.pid      = SNIFF_CRUISE_CONTROL_OFF_BUTTON_PID;
+                            req.pid_uuid = SNIFF_CRUISE_CONTROL_OFF_BUTTON_UUID;
                             req.pid_unit = SNIFF_CRUISE_CONTROL_OFF_BUTTON_UNITS;
 
                             /* Add the PID request */
