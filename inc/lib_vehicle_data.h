@@ -2,6 +2,7 @@
 #define LIB_VEHICLE_DATA_H
 
 #include "lib_pid.h"
+#include "lib_unit_conversion.h"
 
 #define LIB_VEHICLE_MAX_PARAMS 5
 #define LIB_VEHICLE_MAX_DATA LIB_VEHICLE_MAX_PARAMS * 2
