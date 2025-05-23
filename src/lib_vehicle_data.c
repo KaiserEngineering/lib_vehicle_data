@@ -22,10 +22,10 @@ void Vehicle_Init( PTR_VEHICLE_DATA_MANAGER dev )
 
 VEHICLE_DATA_STATUS Vehicle_add_parameter( PTR_VEHICLE_DATA_MANAGER dev, PTR_PID_DATA pid )
 {
-    switch( pid->mode )
+    switch( get_mode_by_uuid(pid->pid_uuid) )
     {
         case CALC1:
-            switch( pid->pid )
+            switch( get_pid_by_uuid(pid->pid_uuid) )
             {
                 case CALC1_TURBOCHARGER_COMPRESSOR_INLET_PRESSURE_PID:
                 case CALC1_CRUISE_CONTROL_OFF_BUTTON_TOGGLE_PID:
@@ -89,26 +89,22 @@ void Vehicle_service( PTR_VEHICLE_DATA_MANAGER dev )
         PID_DATA req;
         for( uint8_t i = 0; i < dev->num_pids; i++)
         {
-            switch( dev->stream[i]->mode )
+            switch( get_mode_by_uuid(dev->stream[i]->pid_uuid) )
             {
                 case CALC1:
-                    switch( dev->stream[i]->pid )
+                    switch( get_pid_by_uuid(dev->stream[i]->pid_uuid) )
                     {
                         case CALC1_TURBOCHARGER_COMPRESSOR_INLET_PRESSURE_PID:
 
                             /* The Boost/Vacuum base unit is kPa */
                             dev->stream[i]->base_unit = PID_UNITS_KPA;
 
-                            req.mode     = MODE1;
-                            req.pid      = MODE1_INTAKE_MANIFOLD_ABSOLUTE_PRESSURE_PID;
                             req.pid_uuid = MODE1_INTAKE_MANIFOLD_ABSOLUTE_PRESSURE_UUID;
                             req.pid_unit = MODE1_INTAKE_MANIFOLD_ABSOLUTE_PRESSURE_UNITS;
 
                             /* Add the PID request */
                             dev->data1[i] = dev->req_pid( &req );
 
-                            req.mode     = MODE1;
-                            req.pid      = MODE1_ABSOLUTE_BAROMETRIC_PRESSURE_PID;
                             req.pid_uuid = MODE1_ABSOLUTE_BAROMETRIC_PRESSURE_UUID;
                             req.pid_unit = MODE1_ABSOLUTE_BAROMETRIC_PRESSURE_UNITS;
 
@@ -124,8 +120,6 @@ void Vehicle_service( PTR_VEHICLE_DATA_MANAGER dev )
                             /* The Cruise Control OFF button base unit is None */
                             dev->stream[i]->base_unit = PID_UNITS_NONE;
 
-                            req.mode     = SNIFF;
-                            req.pid      = SNIFF_CRUISE_CONTROL_OFF_BUTTON_PID;
                             req.pid_uuid = SNIFF_CRUISE_CONTROL_OFF_BUTTON_UUID;
                             req.pid_unit = SNIFF_CRUISE_CONTROL_OFF_BUTTON_UNITS;
 
