@@ -27,7 +27,7 @@ VEHICLE_DATA_STATUS Vehicle_add_parameter( PTR_VEHICLE_DATA_MANAGER dev, PTR_PID
         case CALC1:
             switch( get_pid_by_uuid(pid->pid_uuid) )
             {
-                case CALC1_TURBOCHARGER_COMPRESSOR_INLET_PRESSURE_PID:
+                case CALC1_BOOST_VACUUM_PID:
                 case CALC1_CRUISE_CONTROL_OFF_BUTTON_TOGGLE_PID:
 
                     /* Set the flag to later request the needed data */
@@ -94,19 +94,19 @@ void Vehicle_service( PTR_VEHICLE_DATA_MANAGER dev )
                 case CALC1:
                     switch( get_pid_by_uuid(dev->stream[i]->pid_uuid) )
                     {
-                        case CALC1_TURBOCHARGER_COMPRESSOR_INLET_PRESSURE_PID:
+                        case CALC1_BOOST_VACUUM_PID:
 
                             /* The Boost/Vacuum base unit is kPa */
                             dev->stream[i]->base_unit = PID_UNITS_KPA;
 
-                            req.pid_uuid = MODE1_INTAKE_MANIFOLD_ABSOLUTE_PRESSURE_UUID;
-                            req.pid_unit = MODE1_INTAKE_MANIFOLD_ABSOLUTE_PRESSURE_UNITS;
+                            req.pid_uuid = MODE1_MANIFOLD_ABS_PRESS_UUID;
+                            req.pid_unit = MODE1_MANIFOLD_ABS_PRESS_UNITS;
 
                             /* Add the PID request */
                             dev->data1[i] = dev->req_pid( &req );
 
-                            req.pid_uuid = MODE1_ABSOLUTE_BAROMETRIC_PRESSURE_UUID;
-                            req.pid_unit = MODE1_ABSOLUTE_BAROMETRIC_PRESSURE_UNITS;
+                            req.pid_uuid = MODE1_BAROMETRIC_PRESSURE_UUID;
+                            req.pid_unit = MODE1_BAROMETRIC_PRESSURE_UNITS;
 
                             /* Add the PID request */
                             dev->data2[i] = dev->req_pid( &req );
