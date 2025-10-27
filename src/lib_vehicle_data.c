@@ -82,6 +82,8 @@ VEHICLE_DATA_STATUS Vehicle_remove_PID_request( PTR_VEHICLE_DATA_MANAGER dev, PT
     return VEHICLE_DATA_OK;
 }
 
+void Vehicle_Data_Resync(void) { new_req = 1; }
+
 void Vehicle_service( PTR_VEHICLE_DATA_MANAGER dev )
 {
     if( new_req )
@@ -89,6 +91,19 @@ void Vehicle_service( PTR_VEHICLE_DATA_MANAGER dev )
         PID_DATA req;
         for( uint8_t i = 0; i < dev->num_pids; i++)
         {
+        	if (dev->stream[i] == NULL) continue;
+
+			const uint8_t active = (dev->stream[i]->num_activated > 0);
+
+			// If NOT active, tear down any existing data handles and mark formula undefined
+			if (!active)
+			{
+				if (dev->data1[i] != NULL) { dev->clear_pid(dev->data1[i]); dev->data1[i] = NULL; }
+				if (dev->data2[i] != NULL) { dev->clear_pid(dev->data2[i]); dev->data2[i] = NULL; }
+				dev->formula[i].equation = VEHICLE_DATA_EQ_NOT_DEFINED;
+				continue; // nothing else to set up while paused
+			}
+
             switch( get_mode_by_uuid(dev->stream[i]->pid_uuid) )
             {
                 case CALC1:

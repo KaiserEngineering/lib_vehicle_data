@@ -58,4 +58,6 @@ void Vehicle_service( PTR_VEHICLE_DATA_MANAGER dev );
 
 void Vehicle_tick( void );
 
+void Vehicle_Data_Resync(void);
+
 #endif // LIB_VEHICLE_DATA_H
