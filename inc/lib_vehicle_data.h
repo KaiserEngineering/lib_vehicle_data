@@ -42,6 +42,8 @@ typedef struct _vehicle_data_manager {
 
     request_pid_data req_pid;
 
+    pause_resume_pid pause_resume;
+
     uint8_t num_data;
 
     uint8_t num_pids;

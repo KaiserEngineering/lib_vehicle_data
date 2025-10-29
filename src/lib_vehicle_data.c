@@ -22,6 +22,8 @@ void Vehicle_Init( PTR_VEHICLE_DATA_MANAGER dev )
 
 VEHICLE_DATA_STATUS Vehicle_add_parameter( PTR_VEHICLE_DATA_MANAGER dev, PTR_PID_DATA pid )
 {
+	if (!pid) return VEHICLE_PARAM_UNSUPPORTED;
+
     switch( get_mode_by_uuid(pid->pid_uuid) )
     {
         case CALC1:
@@ -54,6 +56,8 @@ VEHICLE_DATA_STATUS Vehicle_add_parameter( PTR_VEHICLE_DATA_MANAGER dev, PTR_PID
 
 VEHICLE_DATA_STATUS Vehicle_remove_PID_request( PTR_VEHICLE_DATA_MANAGER dev, PTR_PID_DATA pid )
 {
+	if (!pid) return VEHICLE_PARAM_UNSUPPORTED;
+
     /* Set the request to sync PIDs */
     new_req = 1;
 
@@ -94,14 +98,20 @@ void Vehicle_service( PTR_VEHICLE_DATA_MANAGER dev )
         	if (dev->stream[i] == NULL) continue;
 
 			const uint8_t active = (dev->stream[i]->num_activated > 0);
+			const uint8_t device = (dev->stream[i]->devices > 0);
 
 			// If NOT active, tear down any existing data handles and mark formula undefined
-			if (!active)
+			if (!device)
 			{
 				if (dev->data1[i] != NULL) { dev->clear_pid(dev->data1[i]); dev->data1[i] = NULL; }
 				if (dev->data2[i] != NULL) { dev->clear_pid(dev->data2[i]); dev->data2[i] = NULL; }
 				dev->formula[i].equation = VEHICLE_DATA_EQ_NOT_DEFINED;
 				continue; // nothing else to set up while paused
+			} else if(!active)
+			{
+				if (dev->data1[i] != NULL) { dev->pause_resume(dev->data1[i], 0); }
+				if (dev->data2[i] != NULL) { dev->pause_resume(dev->data2[i], 0); }
+				continue;
 			}
 
             switch( get_mode_by_uuid(dev->stream[i]->pid_uuid) )
@@ -117,14 +127,20 @@ void Vehicle_service( PTR_VEHICLE_DATA_MANAGER dev )
                             req.pid_uuid = MODE1_MANIFOLD_ABS_PRESS_UUID;
                             req.pid_unit = MODE1_MANIFOLD_ABS_PRESS_UNITS;
 
-                            /* Add the PID request */
-                            dev->data1[i] = dev->req_pid( &req );
+                            /* Add or resume the PID request */
+                            if( dev->data1[i] == NULL )
+                            	dev->data1[i] = dev->req_pid( &req );
+                            else
+                            	dev->pause_resume( dev->data1[i], 1 );
 
                             req.pid_uuid = MODE1_BAROMETRIC_PRESSURE_UUID;
                             req.pid_unit = MODE1_BAROMETRIC_PRESSURE_UNITS;
 
-                            /* Add the PID request */
-                            dev->data2[i] = dev->req_pid( &req );
+                            /* Add or resume the PID request */
+                            if( dev->data2[i] == NULL )
+                            	dev->data2[i] = dev->req_pid( &req );
+                            else
+                            	dev->pause_resume( dev->data2[i], 1 );
 
                             /* Boost = MAP - Baro */
                             dev->formula[i].equation = VEHICLE_DATA_EQ_VAL1_MINUS_VAL2;
@@ -138,8 +154,11 @@ void Vehicle_service( PTR_VEHICLE_DATA_MANAGER dev )
                             req.pid_uuid = SNIFF_CRUISE_CONTROL_OFF_BUTTON_UUID;
                             req.pid_unit = SNIFF_CRUISE_CONTROL_OFF_BUTTON_UNITS;
 
-                            /* Add the PID request */
-                            dev->data1[i] = dev->req_pid( &req );
+                            /* Add or resume the PID request */
+                            if( dev->data1[i] == NULL )
+                            	dev->data1[i] = dev->req_pid( &req );
+                            else
+                            	dev->pause_resume( dev->data1[i], 1 );
 
                             /* Only 1 data point is needed */
                             dev->data2[i] = NULL;
