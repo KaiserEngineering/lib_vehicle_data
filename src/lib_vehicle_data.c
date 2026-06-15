@@ -142,6 +142,15 @@ void Vehicle_service( PTR_VEHICLE_DATA_MANAGER dev )
                             else
                             	dev->pause_resume( dev->data2[i], 1 );
 
+                            req.pid_uuid = MODE1_BOOST_UUID;
+                            req.pid_unit = MODE1_BOOST_UNITS;
+
+                            /* Add or resume the PID request */
+                            if( dev->data3[i] == NULL )
+                            	dev->data3[i] = dev->req_pid( &req );
+                            else
+                            	dev->pause_resume( dev->data3[i], 1 );
+
                             /* Boost = MAP - Baro */
                             dev->formula[i].equation = VEHICLE_DATA_EQ_VAL1_MINUS_VAL2;
                             break;
@@ -200,13 +209,33 @@ void Vehicle_service( PTR_VEHICLE_DATA_MANAGER dev )
         switch( dev->formula[i].equation )
         {
             case VEHICLE_DATA_EQ_VAL1_MINUS_VAL2:
-                /* Calculate the value: PID_Value = Val1 - Val2 */
-                dev->stream[i]->pid_value = dev->data1[i]->pid_value - dev->data2[i]->pid_value;
-                convert_units( dev->stream[i]->base_unit, dev->stream[i]->pid_unit, &dev->stream[i]->pid_value);
+
+            	float data1 = dev->data1[i]->pid_value;
+            	PID_UNITS data1_units = dev->data1[i]->pid_unit;
+
+            	float data2 = dev->data2[i]->pid_value;
+            	PID_UNITS data2_units = dev->data2[i]->pid_unit;
+
+            	float data3 = dev->data3[i]->pid_value;
+            	PID_UNITS data3_units = dev->data3[i]->pid_unit;
+            	float value = 0;
+
+            	/* Use vehicle's calculated boost when make boost (i.e. no vacuum) */
+            	if( data3 > 0 ) {
+            		value = data3;
+            		convert_units(data3_units, dev->stream[i]->base_unit, &value);
+            	}
+
+            	/* If not calculate the value: PID_Value = Val1 - Val2 */
+            	else {
+            		convert_units(data1_units, dev->stream[i]->base_unit, &data1);
+            		convert_units(data2_units, dev->stream[i]->base_unit, &data2);
+            		value = data1 - data2;
+            	}
 
                 /* Only update the PID timestamp if both PIDs have been acquired. */
                 if( (dev->data1[i]->timestamp > 0) & (dev->data2[i]->timestamp > 0) )
-                    dev->stream[i]->timestamp = vehicle_tick;
+                    update_pid_data(dev->stream[i], value, vehicle_tick);
 
                 break;
 
@@ -222,8 +251,10 @@ void Vehicle_service( PTR_VEHICLE_DATA_MANAGER dev )
                      * being held and the value has already been toggled. Wait until the value
                      * returns to FALSE.
                      */
-                    if( dev->flag == 0 )
-                        dev->stream[i]->pid_value = ( dev->stream[i]->pid_value == 0 ) ? 1 : 0;
+                    if( dev->flag == 0 ) {
+                        float temp = ( dev->stream[i]->pid_value == 0 ) ? 1 : 0;
+                        update_pid_data(dev->stream[i], temp, vehicle_tick);
+                    }
 
                     /* Log that the state is still TRUE */
                     dev->flag = 1;
@@ -234,7 +265,7 @@ void Vehicle_service( PTR_VEHICLE_DATA_MANAGER dev )
 
                 /* Only 1 timestamp needs to be checked.. */
                 if( (dev->data1[i]->timestamp > 0) )
-                    dev->stream[i]->timestamp = vehicle_tick;
+                    update_pid_data(dev->stream[i], dev->stream[i]->pid_value, vehicle_tick);
                 break;
 
             case VEHICLE_DATA_EQ_NOT_DEFINED:
