@@ -12,6 +12,7 @@ void Vehicle_Init( PTR_VEHICLE_DATA_MANAGER dev )
     for( uint8_t i = 0; i < LIB_VEHICLE_MAX_PARAMS; i++) {
         dev->data1[i] = NULL;
         dev->data2[i] = NULL;
+        dev->data3[i] = NULL;
     }
 
     dev->flag = 0;
@@ -105,12 +106,14 @@ void Vehicle_service( PTR_VEHICLE_DATA_MANAGER dev )
 			{
 				if (dev->data1[i] != NULL) { dev->clear_pid(dev->data1[i]); dev->data1[i] = NULL; }
 				if (dev->data2[i] != NULL) { dev->clear_pid(dev->data2[i]); dev->data2[i] = NULL; }
+				if (dev->data3[i] != NULL) { dev->clear_pid(dev->data3[i]); dev->data3[i] = NULL; }
 				dev->formula[i].equation = VEHICLE_DATA_EQ_NOT_DEFINED;
 				continue; // nothing else to set up while paused
 			} else if(!active)
 			{
 				if (dev->data1[i] != NULL) { dev->pause_resume(dev->data1[i], 0); }
 				if (dev->data2[i] != NULL) { dev->pause_resume(dev->data2[i], 0); }
+				if (dev->data3[i] != NULL) { dev->pause_resume(dev->data3[i], 0); }
 				continue;
 			}
 
@@ -170,7 +173,8 @@ void Vehicle_service( PTR_VEHICLE_DATA_MANAGER dev )
                             	dev->pause_resume( dev->data1[i], 1 );
 
                             /* Only 1 data point is needed */
-                            dev->data2[i] = NULL;
+                            if( dev->data2[i] != NULL ) { dev->clear_pid(dev->data2[i]); dev->data2[i] = NULL; }
+                            if( dev->data3[i] != NULL ) { dev->clear_pid(dev->data3[i]); dev->data3[i] = NULL; }
 
                             /* Cruise Control Toggle = Toggle when True */
                             dev->formula[i].equation = VEHICLE_DATA_EQ_TOGGLE_ON_TRUE;
@@ -183,15 +187,25 @@ void Vehicle_service( PTR_VEHICLE_DATA_MANAGER dev )
                      * Check to see if the stream has been NULL'd. If so the data points have to be
                      * cleared too.
                      */
-                    if( (dev->stream[i] == NULL) & ((dev->data1[i] != NULL) | (dev->data1[i] != NULL)) )
+                    if( (dev->stream[i] == NULL) & ((dev->data1[i] != NULL) | (dev->data2[i] != NULL) | (dev->data3[i] != NULL)) )
                     {
                         /* Remove the first data point needed for the PID */
-                        if( dev->data1[i] != NULL )
+                        if( dev->data1[i] != NULL ) {
                             dev->clear_pid( dev->data1[i] );
+                            dev->data1[i] = NULL;
+                        }
 
                         /* Remove the second data point needed for the PID */
-                        if( dev->data2[i] != NULL )
+                        if( dev->data2[i] != NULL ) {
                             dev->clear_pid( dev->data2[i] );
+                            dev->data2[i] = NULL;
+                        }
+
+                        /* Remove the third data point needed for the PID */
+                        if( dev->data3[i] != NULL ) {
+                            dev->clear_pid( dev->data3[i] );
+                            dev->data3[i] = NULL;
+                        }
 
                         /* Remove the PID */
                         if( dev->num_pids > 0 )
